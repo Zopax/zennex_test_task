@@ -10,20 +10,27 @@ use App\Http\Resources\V1\NoteResource;
 use App\Http\Resources\V1\NoteCollection;
 use App\Http\Requests\V1\StoreNoteRequest; 
 use App\Http\Requests\V1\UpdateNoteRequest;
+use App\Services\V1\NoteQuery ;
 
 
 class NoteController extends Controller
 {
+    protected $noteQuery;
+
+    public function __construct(NoteQuery $noteQuery)
+    {
+        $this->noteQuery = $noteQuery;
+    }
+
     /**
      *  Display a listing of the resource
      * 
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new NoteCollection(Note::all());
+        return $notes = $this->noteQuery->filterByTags($request);
     }
-
 
     /**
      *  Display a one thing of resource
