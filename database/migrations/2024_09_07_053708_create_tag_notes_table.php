@@ -13,9 +13,10 @@ return new class extends Migration
     {
         Schema::create('tag_notes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('note_id');
-            $table->foreignId('tag_id');
-            $table->boolean('selected');
+            $table->unsignedBigInteger('note_id');
+            $table->unsignedBigInteger('tag_id');
+            $table->foreign('note_id')->references('id')->on('notes');
+            $table->foreign('tag_id')->references('id')->on('tags');
         });
     }
 

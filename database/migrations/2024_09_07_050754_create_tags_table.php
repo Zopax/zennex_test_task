@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
-            $table->string('name', length: 80);
+            $table->string('tag_name', length: 80);
         });
     }
 
