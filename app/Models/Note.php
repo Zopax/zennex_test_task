@@ -8,6 +8,47 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Note extends Model
 {
+    /**
+     * @OA\Schema(
+     *     schema="Note",
+     *     type="object",
+     *     required={"header", "text_note", "user_id"},
+     *     @OA\Property(
+     *         property="id",
+     *         type="integer",
+     *         format="int64",
+     *         description="ID заметки"
+     *     ),
+     *     @OA\Property(
+     *         property="header",
+     *         type="string",
+     *         description="Название заметки"
+     *     ),
+     *     @OA\Property(
+     *         property="text_noteW",
+     *         type="string",
+     *         description="Контент заметки"
+     *     ),
+     *     @OA\Property(
+     *         property="user_id",
+     *         type="integer",
+     *         format="int64",
+     *         description="ID пользователя создавшего заметку"
+     *     ),
+     *     @OA\Property(
+     *         property="created_at",
+     *         type="string",
+     *         format="date-time",
+     *         description="Метка даты"
+     *     ),
+     *     @OA\Property(
+     *         property="updated_at",
+     *         type="string",
+     *         format="date-time",
+     *         description="Последнее обновление"
+     *     )
+     * )
+     */
     use HasFactory;
     protected $table = "notes";
     protected $fillable = [

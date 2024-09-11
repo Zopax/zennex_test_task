@@ -12,9 +12,32 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
      /**
-     * Create User
-     * @param Request $request
-     * @return User 
+     * @OA\Post(
+     *     path="/api/register",
+     *     summary="Регистрация пользователя",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="test"),
+     *             @OA\Property(property="email", type="string", example="test@test.com"),
+     *             @OA\Property(property="password", type="string", example="123"),
+     *             @OA\Property(property="password_confirmation", type="string", example="123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Пользователь успешно зарегистрирован",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="token_type", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Ошибка валидации"
+     *     )
+     * )
      */
     public function register(Request $request)
     {
@@ -50,10 +73,31 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Login The User
-     * @param Request $request
-     * @return User
+     /**
+     * @OA\Post(
+     *     path="/api/login",
+     *     summary="Авторизация пользователя",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", example="test@test.com"),
+     *             @OA\Property(property="password", type="string", example="123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пользователь успешно авторизован",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="access_token", type="string"),
+     *             @OA\Property(property="token_type", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неправильные учетные данные"
+     *     )
+     * )
      */
     public function login(Request $request)
     {
@@ -81,10 +125,28 @@ class UserController extends Controller
             ]);
     }
 
-    /**
-     * Logout The User
-     * @param Request $request
-     * @return User
+     /**
+     * @OA\Post(
+     *     path="/api/logout",
+     *     summary="Диавторизация пользователя",
+     *     tags={"Auth"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", example="test@test.com"),
+     *             @OA\Property(property="password", type="string", example="123")
+     *         )
+     *     ),
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Пользователь диавторизован",
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неправильные учетные данные"
+     *     )
+     * )
      */
     public function logout(Request $request)
     {

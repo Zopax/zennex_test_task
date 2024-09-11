@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Models\Tag;
+use App\Models\TagNote;
 use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -14,9 +15,25 @@ use App\Http\Requests\V1\UpdateTagRequest;
 class TagController extends Controller
 {
     /**
-     *  Display a listing of the resource
-     * 
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *     path="/api/v1/tags",
+     *     summary="Получение списка тегов",
+     *     description="Возвращает список всех тегов",
+     *     tags={"Tags"},
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Список тегов",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Tag")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Теги не найдены"
+     *     )
+     * )
      */
     public function index(Request $request)
     {
@@ -31,21 +48,57 @@ class TagController extends Controller
     }
 
      /**
-     *  Display a one thing of resource
-     * 
-     * @param \App\Models\Tag $tag
-     * @return \Illuminate\Http\Response
+     * @OA\Get(
+     *     path="/api/v1/tags/{id}",
+     *     summary="Получить тега по ID",
+     *     tags={"Tags"},
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Тег найден",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="tag_name", type="string"),
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Тег не найден"
+     *     )
+     * )
      */
     public function show(Tag $tag)
     {
         return  new TagResource($tag);
     }
 
-    /**
-     *  Store a newly created resource in storage
-     * 
-     * @param \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     /**
+     * @OA\Post(
+     *     path="/api/v1/tags",
+     *     tags={"Tags"},
+     *     summary="Создание нового тега",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="tag_name", type="string", example="Имя тега")
+     *         )
+     *     ),
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=201,
+     *         description="Тег создан успешно"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Ошибка валидации"
+     *     )
+     * )
      */
     public function store(StoreTagRequest $request)
     { 
@@ -57,20 +110,54 @@ class TagController extends Controller
         return $tag;
     }
 
-    /*
-    *  Remove the specified resource from storage
-    * 
-    * @param \App\Models\Tag $tag
-    * @return \Illuminate\Http\Response
-    */
+    /**
+     * @OA\Delete(
+     *     path="/api/v1/tags/{id}",
+     *     tags={"Tags"},
+     *     summary="Удаление тегов по ID",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID of the tag",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=204,
+     *         description="Тег удален успешно"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Тег не найден"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Unauthorized"
+     *     )
+     * )
+     */
    public function destroy(Tag $tag)
    {
-        if ($note->user_id !== auth()->id()) 
+        try 
         {
-            return response()->json(['message' => 'Not authorized.'], 403);
+            if ($tag->user_id !== auth()->id()) 
+            {
+                return response()->json(['message' => 'Not authorized.'], 403);
+            }
+            
+            TagNote::where('tag_id', $tag->id)->delete();
+            Tag::destroy($tag->id);
+            return response()->json([
+                'message' => 'Note is deleted'
+            ]);
         }
-
-        TagNote::where('tag_id', $tag->id)->delete();
-        Tag::destroy($tag->id);
+        catch(\Throwable $th)
+        {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ]);
+        }
    }
 }
