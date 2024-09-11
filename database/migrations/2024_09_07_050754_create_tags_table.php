@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
             $table->string('tag_name', length: 80);
+            $table->foreignId('user_id');
+            $table->unique(array('tag_name', 'user_id'));    
         });
     }
 

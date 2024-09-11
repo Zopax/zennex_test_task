@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use Illuminate\Http\Request;
 use App\Models\Tag;
+use Illuminate\Support\Arr;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\TagResource;
 use App\Http\Resources\V1\TagCollection;
-use Illuminate\Support\Arr;
-use App\Http\Requests\V1\BulkStoreTagRequest;
+use App\Http\Requests\V1\StoreTagRequest;
 use App\Http\Requests\V1\UpdateTagRequest;
 
 class TagController extends Controller
@@ -18,9 +18,16 @@ class TagController extends Controller
      * 
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        return new TagCollection(Tag::all());
+        $user = $request->user();
+
+        if (!$user) 
+        {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        return new TagCollection(Tag::all()->where('user_id', $user->id)); 
     }
 
      /**
@@ -40,12 +47,30 @@ class TagController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function bulkStore(BulkStoreTagRequest $request)
+    public function store(StoreTagRequest $request)
     { 
-        $bulk = collect($request->all())->map(function($arr, $key) {
-            return Arr::except($arr, ['tagName']);
-        });
+        $tag = Tag::create([
+            'tag_name' => $request->tag_name,
+            'user_id' => $request->user()->id
+        ]);
 
-        Tag::insert($bulk->toArray());
+        return $tag;
     }
+
+    /*
+    *  Remove the specified resource from storage
+    * 
+    * @param \App\Models\Tag $tag
+    * @return \Illuminate\Http\Response
+    */
+   public function destroy(Tag $tag)
+   {
+        if ($note->user_id !== auth()->id()) 
+        {
+            return response()->json(['message' => 'Not authorized.'], 403);
+        }
+
+        TagNote::where('tag_id', $tag->id)->delete();
+        Tag::destroy($tag->id);
+   }
 }

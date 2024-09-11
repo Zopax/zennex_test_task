@@ -4,8 +4,9 @@ namespace App\Http\Requests\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Arr;
 
-class StoreNoteRequest extends FormRequest
+class StoreTagRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -15,30 +16,30 @@ class StoreNoteRequest extends FormRequest
         $user = $this->user();
 
         return $user != null && $user->tokenCan('create');
-
-        return true;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array
      */
     public function rules(): array
     {
+        //dd(Rule::unique('tags', 'tag_name')->where('user_id',$this->user()->id));
         return [
-            'header' => ['max:150', 'string'],
-            'text_note' => ['string'], 
-            'tags' => ['array']
+            'tag_name' => ['required', 'max:80', 'string',
+                Rule::unique('tags', 'tag_name')->where('user_id',$this->user()->id)
+            ],
+            
         ];
     }
 
     public function messages()
     {
         return [
-            'header.max:150' => 'The header must be less than 150 characters.',
-            'tags.array' => 'Tags of the note must be in array.',
-            'text_note.string' => 'Text of the note must be string.'
+            'tag_name.unique' => 'Tag already exists.',
+            'tag_name.required' => 'Tag name is required.',
+            'tag_name.max:80' => 'Tag name mast bebe less than 80 characters.',
         ];
     }
 }

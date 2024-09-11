@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\User;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Tag>
@@ -19,7 +20,8 @@ class TagFactory extends Factory
         $name = $this->faker->sentence(1);
 
         return [
-            'tag_name' => $name 
+            'tag_name' => $name,
+            'user_id' => User::factory() 
         ];
     }
 }

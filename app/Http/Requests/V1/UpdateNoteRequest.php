@@ -11,7 +11,9 @@ class UpdateNoteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        $user = $this->user();
+
+        return $user != null && $user->tokenCan('update');
     }
 
     /**
@@ -27,27 +29,27 @@ class UpdateNoteRequest extends FormRequest
         {
             return [
                 'header' => ['max:150', 'string'],
-                'text_note' => ['string'], // изменено на text_note
-                'owner' => ['required', 'exists:users,id'], // если owner - это ID пользователя
+                'text_note' => ['string'],
+                'tags' => ['array']
             ];
         }
         else
         {
             return [
                 'header' => ['sometimes', 'max:150', 'string'],
-                'text_note' => ['sometimes', 'string'], // изменено на text_note
-                'owner' => ['sometimes','required', 'exists:users,id'], // если owner - это ID пользователя
+                'text_note' => ['sometimes', 'string'],
+                'owner' => ['sometimes','required', 'exists:users,id'], 
+                'tags' => ['sometimes','array']
             ];
         }
     }
 
-    protected function prepareForValidation() 
+    public function messages()
     {
-        if($this->owner)
-        {
-            $this->merge([
-                'user_id' => $this->owner
-            ]);
-        }
+        return [
+            'header.max:150' => 'The header must be less than 150 characters.',
+            'tags.array' => 'Tags of the note must be in array.',
+            'text_note.string' => 'Text of the note must be string.'
+        ];
     }
 }

@@ -15,16 +15,15 @@ class NoteQuery
    {
         $tagNames = $request->input('tags', []);
 
+        $query = Note::query();
+
         if (!empty($tagNames)) {
             $tagIds = Tag::whereIn('tag_name', $tagNames)->pluck('id');
-
-            $notes = Note::whereHas('tags', function ($query) use ($tagNames) {
-                $query->whereIn('tag_name', $tagNames);
-            })->get();
-        } else {
-            $notes = Note::all();
+            $query->whereHas('tags', function ($query) use ($tagIds) {
+                $query->whereIn('id', $tagIds);
+            });
         }
-    
-        return new NoteCollection($notes);
+
+        return $query;
     }
 }
