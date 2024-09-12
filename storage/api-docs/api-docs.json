@@ -713,7 +713,7 @@
                         "description": "Название заметки",
                         "type": "string"
                     },
-                    "text_noteW": {
+                    "text_note": {
                         "description": "Контент заметки",
                         "type": "string"
                     },
@@ -721,6 +721,13 @@
                         "description": "ID пользователя создавшего заметку",
                         "type": "integer",
                         "format": "int64"
+                    },
+                    "tags": {
+                        "description": "Список тегов, привязанных к заметке",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Tag"
+                        }
                     },
                     "created_at": {
                         "description": "Метка даты",
