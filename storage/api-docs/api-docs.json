@@ -12,12 +12,59 @@
                 ],
                 "summary": "Получить все заметки пользователя",
                 "operationId": "0eb12475438792d91075dbcb643f0184",
+                "parameters": [
+                    {
+                        "name": "tags[]",
+                        "in": "query",
+                        "description": "Введите тег(и) для поиска заметок \\n Пример",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "example": "Имя тега"
+                            }
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Сортировка по полю. Пример заполнения: ColumnName.filterOrSortMethod",
+                        "required": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "example": "id,asc"
+                            }
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "Список заметок"
+                        "description": "Список заметок",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Note"
+                                    }
+                                }
+                            }
+                        }
                     },
-                    "204": {
+                    "404": {
                         "description": "У вас нет заметок"
+                    },
+                    "400": {
+                        "description": "Ошибка в запросе"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
                     }
                 },
                 "security": [
@@ -144,8 +191,14 @@
                             }
                         }
                     },
-                    "404": {
-                        "description": "Заметка не найдена"
+                    "400": {
+                        "description": "Ошибка в запросе"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
                     }
                 },
                 "security": [
@@ -204,10 +257,29 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Заметка обновлена"
+                        "description": "Заметка обновлена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Note"
+                                    }
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Заметка не найдена"
+                    },
+                    "400": {
+                        "description": "Ошибка в запросе"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
                     }
                 },
                 "security": [
@@ -241,7 +313,7 @@
                         "description": "Заметка не найдена"
                     },
                     "401": {
-                        "description": "Unauthorized"
+                        "description": "Неавторизованный доступ"
                     }
                 },
                 "security": [
@@ -300,87 +372,29 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Заметка обновлена"
+                        "description": "Заметка обновлена",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Note"
+                                    }
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "description": "Заметка не найдена"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/v1/notes/search": {
-            "post": {
-                "tags": [
-                    "Notes"
-                ],
-                "summary": "Поиск заметок по тегам",
-                "operationId": "3a5117462e60ab0fe39a4d936299c648",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "tags": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "string",
-                                            "example": "Тест"
-                                        }
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Заметки найдены",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer"
-                                        },
-                                        "header": {
-                                            "type": "string"
-                                        },
-                                        "text_note": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     },
-                    "204": {
-                        "description": "Результата нет",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "id": {
-                                            "type": "integer"
-                                        },
-                                        "header": {
-                                            "type": "string"
-                                        },
-                                        "text_note": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
+                    "400": {
+                        "description": "Ошибка в запросе"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера"
                     }
                 },
                 "security": [
@@ -413,7 +427,10 @@
                         }
                     },
                     "404": {
-                        "description": "Теги не найдены"
+                        "description": "Тег не найден"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
                     }
                 },
                 "security": [
@@ -446,10 +463,34 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Тег создан успешно"
+                        "description": "Тег создан",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "tag_name": {
+                                            "type": "string"
+                                        },
+                                        "user_id": {
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Ошибка валидации"
+                    },
+                    "404": {
+                        "description": "Тег не найден"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
                     }
                 },
                 "security": [
@@ -464,7 +505,7 @@
                 "tags": [
                     "Tags"
                 ],
-                "summary": "Получить тега по ID",
+                "summary": "Получение тега по ID",
                 "operationId": "a3d7580f0301bd6fff879d635b82a2fb",
                 "parameters": [
                     {
@@ -488,6 +529,9 @@
                                         },
                                         "tag_name": {
                                             "type": "string"
+                                        },
+                                        "user_id": {
+                                            "type": "integer"
                                         }
                                     },
                                     "type": "object"
@@ -497,6 +541,9 @@
                     },
                     "404": {
                         "description": "Тег не найден"
+                    },
+                    "401": {
+                        "description": "Неавторизованный доступ"
                     }
                 },
                 "security": [
@@ -530,7 +577,7 @@
                         "description": "Тег не найден"
                     },
                     "401": {
-                        "description": "Unauthorized"
+                        "description": "Неавторизованный доступ"
                     }
                 },
                 "security": [
@@ -723,10 +770,20 @@
                         "format": "int64"
                     },
                     "tags": {
-                        "description": "Список тегов, привязанных к заметке",
                         "type": "array",
                         "items": {
-                            "$ref": "#/components/schemas/Tag"
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "tag_name": {
+                                    "type": "string"
+                                },
+                                "user_id": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
                         }
                     },
                     "created_at": {

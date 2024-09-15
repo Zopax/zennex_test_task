@@ -31,26 +31,23 @@ class TagController extends Controller
      *     ),
      *     @OA\Response(
      *         response=404,
-     *         description="Теги не найдены"
+     *         description="Тег не найден"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
      *     )
      * )
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        if (!$user) 
-        {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        return new TagCollection(Tag::all()->where('user_id', $user->id)); 
+        return new TagCollection(Tag::all()->where('user_id', $request->user()->id)); 
     }
 
      /**
      * @OA\Get(
      *     path="/api/v1/tags/{id}",
-     *     summary="Получить тега по ID",
+     *     summary="Получение тега по ID",
      *     tags={"Tags"},
      *     @OA\Parameter(
      *         name="id",
@@ -65,11 +62,16 @@ class TagController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="id", type="integer"),
      *             @OA\Property(property="tag_name", type="string"),
+     *             @OA\Property(property="user_id", type="integer"),
      *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Тег не найден"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
      *     )
      * )
      */
@@ -92,11 +94,24 @@ class TagController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=201,
-     *         description="Тег создан успешно"
+     *         description="Тег создан",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="tag_name", type="string"),
+     *             @OA\Property(property="user_id", type="integer"),
+     *         )
      *     ),
      *     @OA\Response(
      *         response=400,
      *         description="Ошибка валидации"
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Тег не найден"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
      *     )
      * )
      */
@@ -133,7 +148,7 @@ class TagController extends Controller
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthorized"
+     *         description="Неавторизованный доступ"
      *     )
      * )
      */

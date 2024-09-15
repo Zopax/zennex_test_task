@@ -36,9 +36,9 @@ class StoreNoteRequest extends FormRequest
     public function messages()
     {
         return [
-            'header.max:150' => 'The header must be less than 150 characters.',
-            'tags.array' => 'Tags of the note must be in array.',
-            'text_note.string' => 'Text of the note must be string.'
+            'header.max:150' => 'Заголовок заметки должен быть не больше 150 символов.',
+            'tags.array' => 'Список тегов должнен быть массивом.',
+            'text_note.string' => 'Текст заметки должнен быть строкой.'
         ];
     }
 }

@@ -25,7 +25,6 @@ class StoreTagRequest extends FormRequest
      */
     public function rules(): array
     {
-        //dd(Rule::unique('tags', 'tag_name')->where('user_id',$this->user()->id));
         return [
             'tag_name' => ['required', 'max:80', 'string',
                 Rule::unique('tags', 'tag_name')->where('user_id',$this->user()->id)
@@ -37,9 +36,9 @@ class StoreTagRequest extends FormRequest
     public function messages()
     {
         return [
-            'tag_name.unique' => 'Tag already exists.',
-            'tag_name.required' => 'Tag name is required.',
-            'tag_name.max:80' => 'Tag name mast bebe less than 80 characters.',
+            'tag_name.unique' => 'Тэг с таким именем уже есть.',
+            'tag_name.required' => 'Название тега должно быть уникальным.',
+            'tag_name.max:80' => 'Название тега не должно превышать 80 символов.',
         ];
     }
 }

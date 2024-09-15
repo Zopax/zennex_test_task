@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Mehradsadeghi\FilterQueryString\FilterQueryString;
 
 class Note extends Model
 {
@@ -25,7 +26,7 @@ class Note extends Model
      *         description="Название заметки"
      *     ),
      *     @OA\Property(
-     *         property="text_noteW",
+     *         property="text_note",
      *         type="string",
      *         description="Контент заметки"
      *     ),
@@ -34,6 +35,16 @@ class Note extends Model
      *         type="integer",
      *         format="int64",
      *         description="ID пользователя создавшего заметку"
+     *     ),
+     *     @OA\Property(
+     *         property="tags",
+     *         type="array",
+     *         @OA\Items(
+     *         type="object",
+     *             @OA\Property(property="id", type="integer"),
+     *             @OA\Property(property="tag_name", type="string"),
+     *             @OA\Property(property="user_id", type="integer"),
+     *         )
      *     ),
      *     @OA\Property(
      *         property="created_at",
@@ -50,11 +61,18 @@ class Note extends Model
      * )
      */
     use HasFactory;
+    use FilterQueryString;
     protected $table = "notes";
     protected $fillable = [
         "header", 
         "text_note", 
         "user_id"
+    ];
+    protected $filters = [
+        'sort' ,
+        'like',
+        'greater',
+        'in'
     ];
 
     /**

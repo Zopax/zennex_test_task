@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use DB;
 use App\Models\Tag;
 use App\Models\Note;
 use App\Models\TagNote;
 use Illuminate\Http\Request;
-use App\Services\V1\NoteQuery;
 use App\Http\Controllers\Controller;
+use App\Services\V1\NoteQueryService;
+use App\Services\V1\CreateNoteService;
 use App\Http\Resources\V1\NoteResource;
 use App\Http\Resources\V1\NoteCollection;
 use App\Http\Requests\V1\StoreNoteRequest; 
@@ -27,10 +29,12 @@ use App\Http\Requests\V1\UpdateNoteRequest;
 class NoteController extends Controller
 {
     protected $noteQuery;
+    protected $createNote;
 
-    public function __construct(NoteQuery $noteQuery)
+    public function __construct(NoteQueryService $noteQuery, CreateNoteService $createNote)
     {
         $this->noteQuery = $noteQuery;
+        $this->createNote = $createNote;
     }
 
     /**
@@ -38,31 +42,79 @@ class NoteController extends Controller
      *     path="/api/v1/notes",
      *     summary="Получить все заметки пользователя",
      *     tags={"Notes"},
+     *     @OA\Parameter(
+     *         name="tags[]",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="array",
+     *             @OA\Items(type="string", example="Имя тега")
+     *         ),
+     *         description="Введите тег(и) для поиска заметок \n Пример"
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort",
+     *         in="query",
+     *         required=false,
+     *         @OA\Schema(
+     *             type="array",
+     *             @OA\Items(type="string", example="id,asc")
+     *         ),
+     *         description="Сортировка по полю. Пример заполнения: ColumnName.filterOrSortMethod"
+     *     ),
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Список заметок"
+     *         description="Список заметок",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Note")
+     *         )
      *     ),
      *     @OA\Response(
-     *         response=204,
+     *         response=404,
      *         description="У вас нет заметок"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Ошибка в запросе"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Внутренняя ошибка сервера"
      *     )
      * )
      */
     public function index(Request $request)
     {
-        $user = $request->user();
+        try 
+        { 
+            $user = $request->user();
 
-        if (!$user) 
-        {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            if (!empty($request->tags))
+            {
+                $notes = $this->noteQuery->filterByTags($request)
+                    ->where('user_id', $user->id)
+                    ->filter()->get();
+        
+                return new NoteCollection($notes);
+            }
+
+            $notes = Note::where('user_id', $user->id)->filter()->get();
+
+            return new NoteCollection($notes);
         }
-
-        $notes = $this->noteQuery->filterByTags($request)
-            ->where('user_id', $user->id) 
-            ->get();
-
-        return new NoteCollection($notes);
+        catch(\Throwable $th)
+        {
+            return response()->json([
+                'status' => false,
+                'message' => $th->getMessage()
+            ]);
+        }
     }
 
     /**
@@ -87,80 +139,22 @@ class NoteController extends Controller
      *         )
      *     ),
      *     @OA\Response(
-     *         response=404,
-     *         description="Заметка не найдена"
+     *         response=400,
+     *         description="Ошибка в запросе"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Внутренняя ошибка сервера"
      *     )
      * )
      */
     public function show(Note $note)
-    {
-        if ($note->user_id !== auth()->id()) 
-        {
-            return response()->json([
-                'message' => 'Not authorized.'
-            ], 403);
-        }
-    
+    {    
         return new NoteResource($note);
-    }
-
-    /**
-     * @OA\Post(
-     *     path="/api/v1/notes/search",
-     *     summary="Поиск заметок по тегам",
-     *     tags={"Notes"},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *              @OA\Property(
-     *                 property="tags",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     type="string",
-     *                     example="Тест"
-     *                 )
-     *             ) 
-     *         )
-     *     ),
-     *      security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Заметки найдены",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="header", type="string"),
-     *             @OA\Property(property="text_note", type="string")
-     *         )
-     *     ),
-     * @OA\Response(
-     *         response=204,
-     *         description="Результата нет",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="id", type="integer"),
-     *             @OA\Property(property="header", type="string"),
-     *             @OA\Property(property="text_note", type="string")
-     *         )
-     *     )
-     * )
-     */
-    public function searchByTags(Request $request)
-    {
-        $user = $request->user();
-        $tags = $request->input('tags');
-        $userId = auth()->id();
-
-        if (!$user) 
-        {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-
-        $notes = Note::where('user_id', $userId) 
-        ->whereHas('tags', function ($query) use ($tags) {
-            $query->whereIn('tag_name', $tags);
-        })->get();
-
-        // Возвращаем заметки в формате JSON
-        return new NoteCollection($notes);
     }
 
     /**
@@ -199,38 +193,25 @@ class NoteController extends Controller
      *                     @OA\Property(property="tag_name", type="string")
      *                 )
      *            )
-     *         )
+     *         ),
+     *       @OA\Response(
+     *         response=400,
+     *         description="Ошибка в запросе"
+     *      ),
+     *      @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
+     *      ),
+     *      @OA\Response(
+     *         response=500,
+     *         description="Внутренняя ошибка сервера"
+     *      )
      *     )
      * )
      */
     public function store(StoreNoteRequest $request)
     {
-        $note = Note::create([
-            'header' => $request->header,
-            'text_note' => $request->text_note,
-            'user_id' => $request->user()->id,
-        ]);
-
-        if ($request->has('tags')) 
-        {
-            foreach ($request->tags as $tag)
-            {   
-                if (Tag::where('tag_name', "=", $tag['tag_name'])
-                    ->where('user_id', "=", $request->user()->id)
-                    ->get()
-                    ->isEmpty())
-                {
-                    Tag::create([
-                        'tag_name' => $tag['tag_name'],
-                        'user_id' => $request->user()->id,
-                    ]);
-                }
-            }
-        }
-
-        $tags = Tag::whereIn('tag_name', $request->tags)->get();
-        $note->tags()->sync($tags);
-    
+        $note = $this->createNote->createNewNote($request);
         return new NoteResource($note);
     }
 
@@ -263,11 +244,27 @@ class NoteController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Заметка обновлена"
+     *         description="Заметка обновлена",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Note")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Заметка не найдена"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Ошибка в запросе"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Внутренняя ошибка сервера"
      *     )
      * )
      * @OA\Put(
@@ -298,23 +295,32 @@ class NoteController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="Заметка обновлена"
+     *         description="Заметка обновлена",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(ref="#/components/schemas/Note")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=404,
      *         description="Заметка не найдена"
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Ошибка в запросе"
+     *     ),
+     *     @OA\Response(
+     *         response=401,
+     *         description="Неавторизованный доступ"
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Внутренняя ошибка сервера"
      *     )
      * )
      */
     public function update(UpdateNoteRequest $request, Note $note)
     {   
-        if ($note->user_id !== auth()->id()) 
-        {
-            return response()->json([
-                'message' => 'Not authorized.'
-            ], 403);
-        }
-    
         $note->update($request->all());
         return new NoteResource($note);
     }
@@ -334,7 +340,7 @@ class NoteController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=204,
-     *         description="Заметка удалена успешно"
+     *         description="Заметка удалена успешно",
      *     ),
      *     @OA\Response(
      *         response=404,
@@ -342,23 +348,21 @@ class NoteController extends Controller
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="Unauthorized"
+     *         description="Неавторизованный доступ"
      *     )
      * )
      */
     public function destroy(Note $note)
     {
         try 
-        {
-            if ($note->user_id !== auth()->id()) 
-            {
-                return response()->json(['message' => 'Not authorized.'], 403);
-            }
-            
-            TagNote::where('note_id', $note->id)->delete();
-            Note::destroy($note->id);
+        {   
+            DB::transaction(function() use ($note){
+                TagNote::where('note_id', $note->id)->delete();
+                Note::destroy($note->id);
+            });
+
             return response()->json([
-                'message' => 'Note is deleted'
+                'message' => 'Заметка удалена'
             ]);
         }
         catch(\Throwable $th)

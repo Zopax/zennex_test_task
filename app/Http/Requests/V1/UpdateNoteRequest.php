@@ -27,14 +27,16 @@ class UpdateNoteRequest extends FormRequest
 
         if($method == "PUT") 
         {
+            // если в теле запроса отсутсвует одно из указанных полей, выдается ошибка валидации
             return [
-                'header' => ['max:150', 'string'],
-                'text_note' => ['string'],
-                'tags' => ['array']
+                'header' => ['required', 'max:150', 'string'],
+                'text_note' => ['required','string'],
+                'tags' => ['required', 'array']
             ];
         }
         else
         {
+            // в теле запроса можно отправить только поля которые будут изменены
             return [
                 'header' => ['sometimes', 'max:150', 'string'],
                 'text_note' => ['sometimes', 'string'],
@@ -47,9 +49,11 @@ class UpdateNoteRequest extends FormRequest
     public function messages()
     {
         return [
-            'header.max:150' => 'The header must be less than 150 characters.',
-            'tags.array' => 'Tags of the note must be in array.',
-            'text_note.string' => 'Text of the note must be string.'
+            'header.max:150' => 'Заголовок заметки не должен превышать 150 символов.',
+            'header.required' => 'Поле header должно быть в теле запроса',
+            'tags.array' => 'Список тегов должен быть массивом.',
+            'text_note.string' => 'Текст заметки должен быть строкой.',
+            'text_note.required' => 'Поле text_note должно быть в теле запроса',
         ];
     }
 }

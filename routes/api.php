@@ -11,5 +11,4 @@
     Route::group(['prefix' => 'v1', 'middleware' => 'auth:sanctum', 'namespace' => 'App\Http\Controllers\Api\V1'], function() {
         Route::apiResource('notes', NoteController::class);
         Route::apiResource('tags', TagController::class);
-        Route::post('/notes/search', 'NoteController@searchByTags');
     });
