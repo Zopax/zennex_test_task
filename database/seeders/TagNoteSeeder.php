@@ -14,7 +14,7 @@ class TagNoteSeeder extends Seeder
     public function run(): void
     {
         TagNote::factory()
-        ->count(230)
+        ->count(50)
         ->create();
     }
 }
